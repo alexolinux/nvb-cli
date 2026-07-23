@@ -1,0 +1,21 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.DS_Store
+
+# Segredos: a chave de API do nvb-cli NÃO fica nesta pasta (ela vai para o
+# diretório de config do SO via platformdirs, fora do repositório). Estas
+# entradas são só uma proteção extra caso alguém crie um .env local para
+# testes manuais.
+.env
+.env.*
+*.token
+secrets.toml
