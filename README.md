@@ -28,6 +28,8 @@ Requires Python 3.10+.
 ```bash
 git clone https://github.com/YOUR_USER/nvb-cli.git
 cd nvb-cli
+python -m venv .venv
+source .venv/bin/activate
 pip install -e .
 ```
 
