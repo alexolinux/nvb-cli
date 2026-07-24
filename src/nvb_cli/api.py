@@ -39,7 +39,7 @@ class NvidiaClient:
         }
         self._timeout = timeout
 
-    # -- catalog ------------------------------------------------------
+    # catalog
     def list_models(self) -> list[dict[str, Any]]:
         with httpx.Client(timeout=self._timeout) as client:
             resp = client.get(f"{self.base_url}/models", headers=self._headers)
@@ -50,7 +50,7 @@ class NvidiaClient:
         # id, owned_by, created — not every catalog model accepts /chat/completions
         return sorted(models, key=lambda m: m.get("id", ""))
 
-    # -- chat (full response) -------------------------------------------
+    # chat (full response)
     def chat(
         self,
         model: str,
@@ -74,7 +74,7 @@ class NvidiaClient:
         data = resp.json()
         return data["choices"][0]["message"]["content"]
 
-    # -- chat streaming (SSE) -------------------------------------------
+    # chat streaming (SSE)
     def chat_stream(
         self,
         model: str,
@@ -106,7 +106,11 @@ class NvidiaClient:
                     event = json.loads(chunk)
                 except json.JSONDecodeError:
                     continue
-                delta = event.get("choices", [{}])[0].get("delta", {})
+                choices = event.get("choices") or []
+                if not choices:
+                    # Final chunk (ex.: Only with "usage"), No delta content.
+                    continue
+                delta = choices[0].get("delta") or {}
                 text = delta.get("content")
                 if text:
                     yield text
