@@ -11,6 +11,11 @@ OpenAI-compatible API).
 > model catalog changes frequently — this CLI discovers the current state
 > by testing the endpoints, not relying on a fixed list.
 
+This project is primarily a study project: it was created to explore how to
+build a small CLI around an external API, experiment with model discovery and
+probing logic, and practice Python tooling and packaging in a practical
+context. It is not intended as an official or production-grade NVIDIA client.
+
 ## Why it exists
 
 The free tier account on build.nvidia.com grants access to an `nvapi-...` key that
