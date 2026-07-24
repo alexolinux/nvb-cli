@@ -134,4 +134,4 @@ pytest -v
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+[GPL-3.0](LICENSE)
