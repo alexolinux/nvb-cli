@@ -5,11 +5,11 @@ build-backend = "hatchling.build"
 [project]
 name = "nvb-cli"
 version = "0.1.0"
-description = "CLI para listar e usar modelos gratuitos (free tier) do NVIDIA Build (build.nvidia.com / NIM)"
+description = "CLI to list and use free tier models from NVIDIA Build (build.nvidia.com / NIM)"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
-authors = [{ name = "Seu Nome" }]
+authors = [{ name = "Your Name" }]
 keywords = ["nvidia", "nim", "llm", "cli", "build.nvidia.com"]
 classifiers = [
     "Environment :: Console",

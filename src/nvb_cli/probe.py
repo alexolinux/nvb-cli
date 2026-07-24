@@ -1,14 +1,14 @@
-"""Descobre quais modelos do catálogo estão *atualmente* disponíveis via endpoint
-free/hosted, já que `/v1/models` lista TODO o catálogo (incluindo modelos pagos,
-retirados, ou que não são de chat) sem sinalizar isso.
+"""Discover which catalog models are *currently* available via the free/hosted endpoint,
+since `/v1/models` lists the FULL catalog (including paid models, deprecated ones,
+or non-chat models) without indicating status.
 
-Estratégia (mesma ideia usada por scripts da comunidade para o NIM): mandar uma
-requisição mínima para /v1/chat/completions e classificar pela resposta:
+Strategy (common approach used by community scripts for NIM): send a minimal
+request to /v1/chat/completions and classify by response:
 
-    200 com "choices" -> respondeu de verdade: hospedado/free agora
-    429               -> existe e está hospedado, só bateu rate limit
-    404/401/403        -> não é um modelo de chat, foi removido, ou sem permissão
-    outros/timeout      -> ambíguo (modelo grande "esfriado", 400 de schema, etc.)
+    200 with "choices" -> valid response: currently hosted/free
+    429               -> exists and hosted, but rate limited
+    404/401/403        -> not a chat model, removed, or unauthorized
+    other/timeout     -> ambiguous (large model cold start, 400 schema error, etc.)
 """
 
 from __future__ import annotations
@@ -29,8 +29,8 @@ PROBE_PAYLOAD_EXTRA = {
 
 
 class Status(str, Enum):
-    FREE = "free"          # respondeu 200 com corpo válido
-    RATE_LIMITED = "rate_limited"  # 429 -> existe e está hospedado
+    FREE = "free"          # responded 200 with valid body
+    RATE_LIMITED = "rate_limited"  # 429 -> exists and hosted
     UNAVAILABLE = "unavailable"    # 404/401/403/500
     AMBIGUOUS = "ambiguous"        # timeout, 400, 422, etc.
 
@@ -88,9 +88,9 @@ async def probe_all(
     timeout: float = 8.0,
     on_result=None,
 ) -> list[ProbeResult]:
-    """Testa todos os model_ids concorrentemente (limitado por `concurrency`).
+    """Test all model_ids concurrently (limited by `concurrency`).
 
-    `on_result`, se fornecido, é chamado a cada resultado (útil para barra de progresso).
+    `on_result`, if provided, is called for each result (useful for progress bar).
     """
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -110,7 +110,7 @@ async def probe_all(
             if on_result:
                 on_result(result)
 
-    # mantém a ordem original do catálogo na saída final
+    # preserve original catalog order in final output
     order = {mid: i for i, mid in enumerate(model_ids)}
     results.sort(key=lambda r: order[r.model_id])
     return results

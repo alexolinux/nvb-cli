@@ -21,8 +21,8 @@ def _client() -> NvidiaClient:
     key = config.get_api_key()
     if not key:
         err_console.print(
-            "[bold red]Nenhuma chave de API configurada.[/bold red]\n"
-            f"  Defina a variável de ambiente {config.ENV_VAR!r}, ou rode:\n"
+            "[bold red]No API key configured.[/bold red]\n"
+            f"  Set environment variable {config.ENV_VAR!r}, or run:\n"
             "  [bold]nvb auth set nvapi-xxxxxxxxxxxxxxxxxxxx[/bold]"
         )
         sys.exit(1)
@@ -32,64 +32,64 @@ def _client() -> NvidiaClient:
 @click.group()
 @click.version_option(package_name="nvb-cli")
 def main() -> None:
-    """nvb: liste e use modelos free-tier do NVIDIA Build (build.nvidia.com) no terminal."""
+    """nvb: list and use free-tier models from NVIDIA Build (build.nvidia.com) in your terminal."""
 
 
 # ---------------------------------------------------------------- auth ----
 @main.group()
 def auth() -> None:
-    """Gerencia a chave de API (nvapi-...) usada nas chamadas."""
+    """Manage the API key (nvapi-...) used for requests."""
 
 
 @auth.command("set")
 @click.argument("api_key")
 def auth_set(api_key: str) -> None:
-    """Salva a chave de API localmente (~/.config/nvb-cli/config.toml)."""
+    """Save the API key locally (~/.config/nvb-cli/config.toml)."""
     if not api_key.startswith("nvapi-"):
-        console.print("[yellow]Aviso:[/yellow] chaves do NVIDIA Build normalmente começam com 'nvapi-'.")
+        console.print("[yellow]Warning:[/yellow] NVIDIA Build keys usually start with 'nvapi-'.")
     config.set_api_key(api_key)
-    console.print("[green]Chave salva.[/green]")
+    console.print("[green]Key saved.[/green]")
 
 
 @auth.command("status")
 def auth_status() -> None:
-    """Mostra se há uma chave configurada (mascarada) e de onde ela vem."""
+    """Show if an API key is configured (masked) and its source."""
     import os
 
     if os.environ.get(config.ENV_VAR):
-        console.print(f"Origem: variável de ambiente [bold]{config.ENV_VAR}[/bold]")
-        console.print(f"Chave:  {config.mask_key(os.environ[config.ENV_VAR])}")
+        console.print(f"Source: environment variable [bold]{config.ENV_VAR}[/bold]")
+        console.print(f"Key:    {config.mask_key(os.environ[config.ENV_VAR])}")
         return
     key = config.load_config().get("api_key")
     if key:
-        console.print(f"Origem: {config.config_file()}")
-        console.print(f"Chave:  {config.mask_key(key)}")
+        console.print(f"Source: {config.config_file()}")
+        console.print(f"Key:    {config.mask_key(key)}")
     else:
-        console.print("[yellow]Nenhuma chave configurada.[/yellow]")
+        console.print("[yellow]No API key configured.[/yellow]")
 
 
 @auth.command("clear")
 def auth_clear() -> None:
-    """Remove a chave salva no arquivo de configuração local."""
+    """Remove the saved key from local config file."""
     config.clear_api_key()
-    console.print("Chave removida do arquivo de configuração.")
+    console.print("Key removed from configuration file.")
 
 
 # -------------------------------------------------------------- models ----
 @main.group()
 def models() -> None:
-    """Lista modelos do catálogo NVIDIA Build."""
+    """List models from the NVIDIA Build catalog."""
 
 
 @models.command("list")
-@click.option("--json", "as_json", is_flag=True, help="Saída em JSON bruto.")
+@click.option("--json", "as_json", is_flag=True, help="Raw JSON output.")
 def models_list(as_json: bool) -> None:
-    """Lista TODOS os modelos do catálogo (não indica quais são free)."""
+    """List ALL models in the catalog (does not indicate which are free)."""
     client = _client()
     try:
         items = client.list_models()
     except ApiError as exc:
-        err_console.print(f"[bold red]Erro {exc.status_code}:[/bold red] {exc.message}")
+        err_console.print(f"[bold red]Error {exc.status_code}:[/bold red] {exc.message}")
         sys.exit(1)
 
     if as_json:
@@ -98,30 +98,30 @@ def models_list(as_json: bool) -> None:
         console.print_json(_json.dumps(items))
         return
 
-    table = Table(title=f"Catálogo NVIDIA Build ({len(items)} modelos)")
-    table.add_column("ID do modelo", style="bold")
+    table = Table(title=f"NVIDIA Build Catalog ({len(items)} models)")
+    table.add_column("Model ID", style="bold")
     table.add_column("Owned by")
     for m in items:
         table.add_row(m.get("id", "?"), m.get("owned_by", "-"))
     console.print(table)
     console.print(
-        "\n[dim]Isto lista o catálogo inteiro (inclui modelos pagos, embeddings, etc). "
-        "Use `nvb models free` para descobrir quais respondem agora no endpoint hospedado.[/dim]"
+        "\n[dim]This lists the full catalog (includes paid models, embeddings, etc). "
+        "Use `nvb models free` to discover which ones respond now on the hosted endpoint.[/dim]"
     )
 
 
 @models.command("free")
-@click.option("--refresh", is_flag=True, help="Ignora o cache e testa tudo de novo.")
-@click.option("--ttl", default=cache.DEFAULT_TTL_SECONDS, show_default=True, help="Validade do cache, em segundos.")
-@click.option("--concurrency", default=10, show_default=True, help="Requisições simultâneas ao testar o catálogo.")
-@click.option("--timeout", default=8.0, show_default=True, help="Timeout por requisição de teste (s).")
-@click.option("--json", "as_json", is_flag=True, help="Saída em JSON bruto.")
+@click.option("--refresh", is_flag=True, help="Bypass cache and test everything again.")
+@click.option("--ttl", default=cache.DEFAULT_TTL_SECONDS, show_default=True, help="Cache TTL in seconds.")
+@click.option("--concurrency", default=10, show_default=True, help="Concurrent requests when probing catalog.")
+@click.option("--timeout", default=8.0, show_default=True, help="Timeout per probe request (seconds).")
+@click.option("--json", "as_json", is_flag=True, help="Raw JSON output.")
 def models_free(refresh: bool, ttl: int, concurrency: int, timeout: float, as_json: bool) -> None:
-    """Descobre quais modelos respondem *agora* no endpoint free/hospedado.
+    """Discover which models respond *now* on the free/hosted endpoint.
 
-    A API não expõe um campo "é free" — este comando manda uma requisição mínima
-    de chat para cada modelo do catálogo e classifica pela resposta (200/429 =
-    hospedado; 404/401/403 = indisponível). O resultado fica em cache local.
+    The API does not expose a "is_free" field — this command sends a minimal
+    chat request to each model in the catalog and classifies by response
+    (200/429 = hosted; 404/401/403 = unavailable). The result is cached locally.
     """
     client = _client()
     base_url = config.get_base_url()
@@ -129,12 +129,12 @@ def models_free(refresh: bool, ttl: int, concurrency: int, timeout: float, as_js
     cached = None if refresh else cache.load(ttl_seconds=ttl)
     if cached:
         results = cached["results"]
-        console.print(f"[dim]Usando cache de {cache.cache_file()} (rode com --refresh para atualizar).[/dim]")
+        console.print(f"[dim]Using cache from {cache.cache_file()} (run with --refresh to update).[/dim]")
     else:
         try:
             catalog = client.list_models()
         except ApiError as exc:
-            err_console.print(f"[bold red]Erro {exc.status_code}:[/bold red] {exc.message}")
+            err_console.print(f"[bold red]Error {exc.status_code}:[/bold red] {exc.message}")
             sys.exit(1)
 
         model_ids = [m["id"] for m in catalog]
@@ -147,7 +147,7 @@ def models_free(refresh: bool, ttl: int, concurrency: int, timeout: float, as_js
             TextColumn("{task.completed}/{task.total}"),
             console=console,
         ) as progress:
-            task = progress.add_task("Testando modelos...", total=len(model_ids))
+            task = progress.add_task("Testing models...", total=len(model_ids))
 
             def on_result(r):
                 results[r.model_id] = r.status.value
@@ -176,27 +176,27 @@ def models_free(refresh: bool, ttl: int, concurrency: int, timeout: float, as_js
         console.print_json(_json.dumps({"free_or_hosted": free_ids, "all_results": results}))
         return
 
-    table = Table(title=f"Modelos disponíveis agora ({len(free_ids)} de {len(results)})")
-    table.add_column("ID do modelo", style="bold green")
+    table = Table(title=f"Models available now ({len(free_ids)} of {len(results)})")
+    table.add_column("Model ID", style="bold green")
     table.add_column("Status")
     for mid in free_ids:
         status = results[mid]
-        label = "free (200)" if status == Status.FREE.value else "hospedado (429, rate-limited)"
+        label = "free (200)" if status == Status.FREE.value else "hosted (429, rate-limited)"
         table.add_row(mid, label)
     console.print(table)
     console.print(
-        "\n[dim]Use com: nvb chat <ID_DO_MODELO>   ou   nvb run <ID_DO_MODELO> \"pergunta\"[/dim]"
+        "\n[dim]Use with: nvb chat <MODEL_ID>   or   nvb run <MODEL_ID> \"prompt\"[/dim]"
     )
 
 
 # --------------------------------------------------------------- chat -----
 @main.command()
 @click.argument("model")
-@click.option("--system", default=None, help="Mensagem de sistema opcional.")
+@click.option("--system", default=None, help="Optional system message.")
 @click.option("--temperature", default=0.7, show_default=True)
 @click.option("--max-tokens", default=1024, show_default=True)
 def chat(model: str, system: str | None, temperature: float, max_tokens: int) -> None:
-    """Abre um chat interativo (REPL) com o MODEL informado."""
+    """Open an interactive chat (REPL) with specified MODEL."""
     client = _client()
     run_repl(client, model, system=system, temperature=temperature, max_tokens=max_tokens)
 
@@ -204,11 +204,11 @@ def chat(model: str, system: str | None, temperature: float, max_tokens: int) ->
 @main.command()
 @click.argument("model")
 @click.argument("prompt")
-@click.option("--system", default=None, help="Mensagem de sistema opcional.")
+@click.option("--system", default=None, help="Optional system message.")
 @click.option("--temperature", default=0.7, show_default=True)
 @click.option("--max-tokens", default=512, show_default=True)
 def run(model: str, prompt: str, system: str | None, temperature: float, max_tokens: int) -> None:
-    """Envia um único PROMPT ao MODEL e imprime a resposta (não interativo)."""
+    """Send a single PROMPT to MODEL and print response (non-interactive)."""
     client = _client()
     messages = []
     if system:
@@ -218,7 +218,7 @@ def run(model: str, prompt: str, system: str | None, temperature: float, max_tok
     try:
         reply = client.chat(model, messages, max_tokens=max_tokens, temperature=temperature)
     except ApiError as exc:
-        err_console.print(f"[bold red]Erro {exc.status_code}:[/bold red] {exc.message}")
+        err_console.print(f"[bold red]Error {exc.status_code}:[/bold red] {exc.message}")
         sys.exit(1)
     console.print(reply)
 

@@ -1,4 +1,4 @@
-"""Loop de chat interativo (REPL) no terminal, com streaming token a token."""
+"""Interactive terminal chat loop (REPL) with token-by-token streaming."""
 
 from __future__ import annotations
 
@@ -18,8 +18,8 @@ def run_repl(
     max_tokens: int = 1024,
     markdown: bool = True,
 ) -> None:
-    console.print(f"[bold cyan]nvb chat[/bold cyan] — modelo: [bold]{model}[/bold]")
-    console.print("[dim]Digite sua mensagem. /sair para encerrar, /novo para limpar o histórico.[/dim]\n")
+    console.print(f"[bold cyan]nvb chat[/bold cyan] — model: [bold]{model}[/bold]")
+    console.print("[dim]Type your message. /exit to quit, /clear to clear history.[/dim]\n")
 
     messages: list[dict[str, str]] = []
     if system:
@@ -27,18 +27,18 @@ def run_repl(
 
     while True:
         try:
-            user_input = console.input("[bold green]voce>[/bold green] ").strip()
+            user_input = console.input("[bold green]you>[/bold green] ").strip()
         except (EOFError, KeyboardInterrupt):
-            console.print("\n[dim]encerrado.[/dim]")
+            console.print("\n[dim]exited.[/dim]")
             break
 
         if not user_input:
             continue
-        if user_input in ("/sair", "/exit", "/quit"):
+        if user_input in ("/exit", "/quit", "/sair"):
             break
-        if user_input == "/novo":
+        if user_input in ("/clear", "/new", "/novo"):
             messages = [messages[0]] if system else []
-            console.print("[dim]histórico limpo.[/dim]")
+            console.print("[dim]history cleared.[/dim]")
             continue
 
         messages.append({"role": "user", "content": user_input})
@@ -52,18 +52,18 @@ def run_repl(
                 collected += token
                 console.print(token, end="", soft_wrap=True)
         except ApiError as exc:
-            console.print(f"\n[bold red]Erro ({exc.status_code}):[/bold red] {exc.message}")
+            console.print(f"\n[bold red]Error ({exc.status_code}):[/bold red] {exc.message}")
             if exc.status_code in (401, 403):
-                console.print("[dim]Confira sua chave com `nvb auth status`.[/dim]")
+                console.print("[dim]Check your key with `nvb auth status`.[/dim]")
             if exc.status_code == 404:
                 console.print(
-                    "[dim]Esse modelo pode não ter endpoint de chat hospedado agora. "
-                    "Rode `nvb models free --refresh` para conferir.[/dim]"
+                    "[dim]This model may not have a hosted chat endpoint right now. "
+                    "Run `nvb models free --refresh` to check.[/dim]"
                 )
-            messages.pop()  # remove a pergunta que falhou, para não poluir o histórico
+            messages.pop()  # remove failed question so it does not clutter history
             continue
 
-        console.print()  # nova linha ao fim do streaming
+        console.print()  # new line after streaming
         if markdown and collected.strip():
-            pass  # já foi impresso em streaming; markdown completo fica no /novo (ver README)
+            pass  # already printed via streaming
         messages.append({"role": "assistant", "content": collected})

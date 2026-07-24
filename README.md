@@ -83,7 +83,7 @@ nvb chat meta/llama-3.1-8b-instruct
 nvb chat qwen/qwen3.5-397b-a17b --system "Always respond in English."
 ```
 
-Within the chat: `/novo` clears history, `/sair` exits.
+Within the chat: `/clear` clears history, `/exit` exits.
 
 ### Single question, no REPL (good for scripts)
 

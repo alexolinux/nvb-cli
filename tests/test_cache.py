@@ -20,7 +20,7 @@ def test_expired_cache_returns_none(monkeypatch, tmp_path):
     importlib.reload(cache_module)
 
     cache_module.save({"m": "free"}, base_url="https://example.test")
-    # TTL negativo == já expirado no mesmo instante
+    # Negative TTL == already expired
     assert cache_module.load(ttl_seconds=-1) is None
 
 
