@@ -1,11 +1,11 @@
-"""Cliente para a API OpenAI-compatible do NVIDIA Build (NIM).
+"""Client for the OpenAI-compatible NVIDIA Build API (NIM).
 
 Base URL: https://integrate.api.nvidia.com/v1
 Docs: https://docs.api.nvidia.com/nim/docs/api-quickstart
 
-Endpoints usados:
-    GET  /v1/models            -> catálogo completo (não distingue free/pago)
-    POST /v1/chat/completions  -> chat, com suporte a streaming (SSE)
+Endpoints used:
+    GET  /v1/models            -> full catalog (does not distinguish free/paid)
+    POST /v1/chat/completions  -> chat, with streaming support (SSE)
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ from typing import Any
 
 import httpx
 
-USER_AGENT = "nvb-cli/0.1.0 (+https://github.com/SEU_USUARIO/nvb-cli)"
+USER_AGENT = "nvb-cli/0.1.0 (+https://github.com/YOUR_USER/nvb-cli)"
 
 
 class ApiError(RuntimeError):
@@ -30,7 +30,7 @@ class ApiError(RuntimeError):
 class NvidiaClient:
     def __init__(self, api_key: str, base_url: str, timeout: float = 30.0):
         if not api_key:
-            raise ValueError("api_key vazio: rode `nvb auth set <SUA_CHAVE>` primeiro")
+            raise ValueError("empty api_key: run `nvb auth set <YOUR_KEY>` first")
         self.base_url = base_url.rstrip("/")
         self._headers = {
             "Authorization": f"Bearer {api_key}",
@@ -39,18 +39,18 @@ class NvidiaClient:
         }
         self._timeout = timeout
 
-    # -- catálogo -----------------------------------------------------
+    # -- catalog ------------------------------------------------------
     def list_models(self) -> list[dict[str, Any]]:
         with httpx.Client(timeout=self._timeout) as client:
             resp = client.get(f"{self.base_url}/models", headers=self._headers)
         if resp.status_code != 200:
-            raise ApiError(resp.status_code, "falha ao listar modelos", resp.text)
+            raise ApiError(resp.status_code, "failed to list models", resp.text)
         data = resp.json()
         models = data.get("data", [])
-        # id, owned_by, created — nem todo modelo do catálogo aceita /chat/completions
+        # id, owned_by, created — not every catalog model accepts /chat/completions
         return sorted(models, key=lambda m: m.get("id", ""))
 
-    # -- chat (resposta completa) --------------------------------------
+    # -- chat (full response) -------------------------------------------
     def chat(
         self,
         model: str,
@@ -70,11 +70,11 @@ class NvidiaClient:
                 f"{self.base_url}/chat/completions", headers=self._headers, json=payload
             )
         if resp.status_code != 200:
-            raise ApiError(resp.status_code, "falha na chamada de chat", resp.text)
+            raise ApiError(resp.status_code, "chat request failed", resp.text)
         data = resp.json()
         return data["choices"][0]["message"]["content"]
 
-    # -- chat em streaming (SSE) ----------------------------------------
+    # -- chat streaming (SSE) -------------------------------------------
     def chat_stream(
         self,
         model: str,
@@ -94,7 +94,7 @@ class NvidiaClient:
         ) as resp:
             if resp.status_code != 200:
                 body = resp.read().decode(errors="replace")
-                raise ApiError(resp.status_code, "falha na chamada de chat (stream)", body)
+                raise ApiError(resp.status_code, "chat request failed (stream)", body)
 
             for line in resp.iter_lines():
                 if not line or not line.startswith("data:"):

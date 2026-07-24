@@ -1,8 +1,8 @@
-"""Leitura/escrita da configuração local (~/.config/nvb-cli/config.toml).
+"""Read/write local configuration (~/.config/nvb-cli/config.toml).
 
-Precedência da chave de API:
-    1. Variável de ambiente NVIDIA_API_KEY
-    2. Arquivo de configuração salvo via `nvb auth set`
+API key precedence:
+    1. Environment variable NVIDIA_API_KEY
+    2. Saved config file via `nvb auth set`
 """
 
 from __future__ import annotations
@@ -47,7 +47,7 @@ def save_config(data: dict) -> None:
     path = config_file()
     with path.open("wb") as f:
         tomli_w.dump(data, f)
-    # A chave é sensível: restringe permissões no arquivo (best-effort, no-op no Windows)
+    # Sensitive key: restrict file permissions (best-effort, no-op on Windows)
     try:
         path.chmod(0o600)
     except OSError:

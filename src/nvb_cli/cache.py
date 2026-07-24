@@ -1,4 +1,4 @@
-"""Cache em disco dos resultados de probing (evita testar 100+ modelos a cada chamada)."""
+"""Disk cache for probe results (avoids testing 100+ models on every call)."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from platformdirs import user_cache_dir
 
 from nvb_cli.config import APP_NAME
 
-DEFAULT_TTL_SECONDS = 6 * 60 * 60  # 6 horas: o catálogo free muda com pouca frequência
+DEFAULT_TTL_SECONDS = 6 * 60 * 60  # 6 hours: free catalog changes infrequently
 
 
 def cache_dir() -> Path:
@@ -25,7 +25,7 @@ def cache_file() -> Path:
 
 
 def load(ttl_seconds: int = DEFAULT_TTL_SECONDS) -> dict[str, Any] | None:
-    """Retorna o cache se ele existir e ainda estiver dentro do TTL, senão None."""
+    """Returns the cache if it exists and is within TTL, otherwise None."""
     path = cache_file()
     if not path.exists():
         return None
@@ -41,7 +41,7 @@ def load(ttl_seconds: int = DEFAULT_TTL_SECONDS) -> dict[str, Any] | None:
 
 
 def save(results: dict[str, str], base_url: str) -> dict[str, Any]:
-    """Grava {model_id: status} no cache junto com o timestamp da checagem."""
+    """Saves {model_id: status} in cache along with check timestamp."""
     data = {
         "checked_at": time.time(),
         "base_url": base_url,
