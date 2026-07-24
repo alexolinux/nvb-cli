@@ -1,5 +1,7 @@
 # nvb-cli
 
+---------
+
 Unofficial CLI to list and use, directly from the terminal, the available models
 in your free tier account on [NVIDIA Build](https://build.nvidia.com/) (NIM catalog,
 OpenAI-compatible API).
@@ -25,7 +27,7 @@ to avoid repeating the test every time.
 
 Requires Python 3.10+.
 
-```bash
+```shell
 git clone https://github.com/YOUR_USER/nvb-cli.git
 cd nvb-cli
 python -m venv .venv
@@ -41,13 +43,10 @@ This installs the `nvb` command in your PATH (via `pip install -e .`, using the
 Generate your key at build.nvidia.com → account icon → **API Keys** → **Generate
 API Key** (starts with `nvapi-`).
 
-```bash
-# option 1: save locally (~/.config/nvb-cli/config.toml, permission 600)
+```shell
+# API Key: save locally (~/.config/nvb-cli/config.toml, permission 600)
 nvb auth set nvapi-xxxxxxxxxxxxxxxxxxxxxxxxxxxx
-
-# option 2: environment variable (takes priority over saved file)
-export NVIDIA_API_KEY="nvapi-xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-
+# Validate your key
 nvb auth status
 ```
 
@@ -55,13 +54,13 @@ nvb auth status
 
 ### List the entire catalog
 
-```bash
+```shell
 nvb models list
 ```
 
 ### Discover which models are free/hosted now
 
-```bash
+```shell
 nvb models free
 ```
 
@@ -69,7 +68,7 @@ This tests (with limited concurrency) each model in the catalog against
 `/v1/chat/completions` and shows only those that responded. The result is cached
 for 6h by default:
 
-```bash
+```shell
 nvb models free --refresh          # force new test, ignore cache
 nvb models free --ttl 3600          # cache valid for 1h
 nvb models free --concurrency 20    # more requests in parallel
@@ -78,7 +77,7 @@ nvb models free --json              # output in JSON, for scripts
 
 ### Chat with a model (interactive chat)
 
-```bash
+```shell
 nvb chat meta/llama-3.1-8b-instruct
 nvb chat qwen/qwen3.5-397b-a17b --system "Always respond in English."
 ```
@@ -87,13 +86,13 @@ Within the chat: `/clear` clears history, `/exit` exits.
 
 ### Single question, no REPL (good for scripts)
 
-```bash
+```shell
 nvb run meta/llama-3.1-8b-instruct "Explain what NIM is in one sentence."
 ```
 
 ## Project structure
 
-```
+```shell
 nvb-cli/
 ├── pyproject.toml
 ├── README.md
@@ -103,12 +102,12 @@ nvb-cli/
 ├── src/nvb_cli/
 │   ├── __init__.py
 │   ├── __main__.py
-│   ├── cli.py        # click commands (auth, models, chat, run)
-│   ├── api.py         # HTTP client for /v1/models and /v1/chat/completions
+│   ├── cli.py          # click commands (auth, models, chat, run)
+│   ├── api.py          # HTTP client for /v1/models and /v1/chat/completions
 │   ├── probe.py        # tests in parallel which models respond (free)
-│   ├── cache.py         # local JSON cache with TTL
-│   ├── chat.py           # chat REPL with streaming
-│   └── config.py          # API key and config at ~/.config/nvb-cli
+│   ├── cache.py        # local JSON cache with TTL
+│   ├── chat.py         # chat REPL with streaming
+│   └── config.py       # API key and config at ~/.config/nvb-cli
 └── tests/
     ├── test_config.py
     ├── test_cache.py
@@ -125,13 +124,17 @@ nvb-cli/
   uses limited concurrency and implicit delay via semaphore, but large catalogs
   still take a few minutes to fully test.
 
-## Development
+## ⚙️ Development
 
-```bash
+```shell
 pip install -e ".[dev]"
 pytest -v
 ```
 
-## License
+## ©️ License
 
 [GPL-3.0](LICENSE)
+
+## 🐧 Author
+
+[alexolinux](https://alexolinux.com)
