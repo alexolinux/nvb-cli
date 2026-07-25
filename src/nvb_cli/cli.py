@@ -129,7 +129,8 @@ def models_free(refresh: bool, ttl: int, concurrency: int, timeout: float, as_js
     cached = None if refresh else cache.load(ttl_seconds=ttl)
     if cached:
         results = cached["results"]
-        console.print(f"[dim]Using cache from {cache.cache_file()} (run with --refresh to update).[/dim]")
+        if not as_json:
+            console.print(f"[dim]Using cache from {cache.cache_file()} (run with --refresh to update).[/dim]")
     else:
         try:
             catalog = client.list_models()
@@ -146,6 +147,7 @@ def models_free(refresh: bool, ttl: int, concurrency: int, timeout: float, as_js
             BarColumn(),
             TextColumn("{task.completed}/{task.total}"),
             console=console,
+            disable=as_json,
         ) as progress:
             task = progress.add_task("Testing models...", total=len(model_ids))
 
@@ -173,19 +175,21 @@ def models_free(refresh: bool, ttl: int, concurrency: int, timeout: float, as_js
     if as_json:
         import json as _json
 
-        console.print_json(_json.dumps({"free_or_hosted": free_ids, "all_results": results}))
+        console.print_json(_json.dumps({"base_url": base_url, "free_or_hosted": free_ids, "all_results": results}))
         return
 
     table = Table(title=f"Models available now ({len(free_ids)} of {len(results)})")
     table.add_column("Model ID", style="bold green")
     table.add_column("Status")
+    table.add_column("Base URL", style="cyan")
     for mid in free_ids:
         status = results[mid]
         label = "free (200)" if status == Status.FREE.value else "hosted (429, rate-limited)"
-        table.add_row(mid, label)
+        table.add_row(mid, label, base_url)
     console.print(table)
     console.print(
-        "\n[dim]Use with: nvb chat <MODEL_ID>   or   nvb run <MODEL_ID> \"prompt\"[/dim]"
+        f"\n[dim]Base URL for OpenAI-compatible clients (Cline, Cursor, etc.): [bold cyan]{base_url}[/bold cyan][/dim]\n"
+        "[dim]Use with: nvb chat <MODEL_ID>   or   nvb run <MODEL_ID> \"prompt\"[/dim]"
     )
 
 
