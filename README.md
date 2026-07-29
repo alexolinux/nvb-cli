@@ -136,10 +136,10 @@ pip install -e ".[dev]"
 pytest -v
 ```
 
-## ©️ License
+## License
 
-[GPL-3.0](LICENSE)
+[MIT](LICENSE)
 
 ## 🐧 Author
 
-[alexolinux](https://alexolinux.com)
+[https://alexolinux.com](https://alexolinux.com)
