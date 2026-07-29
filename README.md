@@ -1,4 +1,4 @@
-# ![](./img.png) nvb-cli
+# ![nvb-cli](./img.png) nvb-cli
 
 ---------
 
